@@ -1,0 +1,102 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!-- was: <?xml version="1.0" encoding="UTF-8"?> -->
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:task="http://www.springframework.org/schema/task"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
+       http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.3.xsd
+       http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.3.xsd
+       http://www.springframework.org/schema/jdbc     
+       http://www.springframework.org/schema/jdbc/spring-jdbc-4.3.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context-4.3.xsd
+       http://www.springframework.org/schema/task
+       http://www.springframework.org/schema/task/spring-task-4.3.xsd">
+
+	<task:annotation-driven />
+	<context:component-scan
+		base-package="com.newtronics.tx" />
+
+	<bean id="em"
+		class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="packagesToScan" value="com.newtronics" />
+		<property name="jpaVendorAdapter">
+			<bean
+				class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
+				<property name="showSql" value="true" />
+			</bean>
+		</property>
+		<property name="jpaProperties">
+			<props>
+				<prop key="hibernate.dialect">org.hibernate.dialect.HSQLDialect</prop>
+				<prop key="hibernate.show_sql">true</prop>
+			</props>
+		</property>
+	</bean>
+
+	<context:property-placeholder location="classpath:system.properties" />
+
+	<!--
+	<bean id="dataSource"
+		class="org.springframework.jdbc.datasource.DriverManagerDataSource"
+		p:driverClassName="${jdbc.driverClassName}" p:url="${jdbc.url}"
+		p:username="${jdbc.username}" p:password="${jdbc.password}" />
+	 -->
+
+
+	<!-- ADD PERSISTENCE SUPPORT HERE (jpa, hibernate, etc) -->
+
+	<jdbc:embedded-database id="dataSource"
+		type="HSQL">
+		<jdbc:script location="/WEB-INF/create-db.sql"
+			encoding="utf-8" />
+		<jdbc:script location="/WEB-INF/insert-data.sql"
+			encoding="utf-8" />
+	</jdbc:embedded-database>
+	<!-- <bean id="dataSource" class="org.apache.tomcat.jdbc.pool.DataSource" 
+		destroy-method="close"> <property name="driverClassName" value="com.mysql.cj.jdbc.Driver" 
+		/> <property name="url" value="jdbc:mysql://localhost/sys?serverTimezone=JST" 
+		/> <property name="username" value="root" /> <property name="password" value="9350" 
+		/> <property name="validationQuery" value="SELECT 1 FROM DUAL" /> </bean> -->
+	<bean id="transactionManager"
+		class="org.springframework.orm.jpa.JpaTransactionManager">
+		<property name="entityManagerFactory" ref="em" />
+	</bean>
+	<tx:annotation-driven
+		transaction-manager="transactionManager" proxy-target-class="true" />
+
+	<bean id="persistenceExceptionTranslationPostProcessor"
+		class="org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor" />
+
+	<bean id="javaMailSender"
+		class="org.springframework.mail.javamail.JavaMailSenderImpl">
+		<property name="host" value="smtp.live.com" />
+		<property name="port" value="587" />
+		<property name="username" value="wang_xiangwei@hotmail.com" />
+		<property name="password" value="" />
+
+		<property name="javaMailProperties">
+			<props>
+				<prop key="mail.transport.protocol">smtp</prop>
+				<prop key="mail.smtp.auth">true</prop>
+				<prop key="mail.smtp.starttls.enable">true</prop>
+				<!-- prop key="mail.smtp.socketFactory.port">465</prop -->
+				<prop key="mail.smtp.socketFactory.class">javax.net.ssl.SSLSocketFactory</prop>
+				<!-- prop key="mail.smtp.port">465</prop -->
+			</props>
+		</property>
+	</bean>
+
+
+	<bean id="freemarkerConfiguration "
+		class="org.springframework.ui.freemarker.FreeMarkerConfigurationFactoryBean">
+		<property name="templateLoaderPath"
+			value="/WEB-INF/classes/freemarker/" />
+	</bean>
+</beans>
